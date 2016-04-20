@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-${obj.name}
+${obj}
 </body>
 </html>

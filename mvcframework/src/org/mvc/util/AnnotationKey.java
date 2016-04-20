@@ -40,8 +40,12 @@ public class AnnotationKey {
 		this.className = className;
 		this.methodName = methodName;
 		
-		for(Class<?> clazz :paramTypes)
-			paramStrings+=clazz.getSimpleName();
+		if(paramTypes!=null)
+			for(Class<?> clazz :paramTypes)
+				paramStrings+=clazz.getSimpleName();
+		else
+			paramStrings = "";
+		
 	}
 	@Override
 	public int hashCode() {

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -17,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.mvc.annotation.Action;
-import org.mvc.util.ActionHandler;
+import org.mvc.handler.ActionHandler;
 import org.mvc.util.AnnotationKey;
 import org.mvc.util.ClassUtil;
 
@@ -33,6 +35,7 @@ public class MainFilter implements Filter {
 	private Map<AnnotationKey, Annotation[]> annotations;
 	private Map<String, AnnotationKey> actions;
 	private ActionHandler actionHandler;
+	private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
@@ -89,7 +92,9 @@ public class MainFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) resp;
 		String actionPath = request.getServletPath();
 		// 静态资源类型，不进行过滤处理
-		if (actionPath.contains(".jsp")) {
+		Pattern p = Pattern.compile(IGNORE);
+		Matcher m = p.matcher(actionPath);
+		if (m.find()) {
 			chain.doFilter(request, response);
 		}
 		// 检测是否有改路径映射的Action，若无就直接返回404
