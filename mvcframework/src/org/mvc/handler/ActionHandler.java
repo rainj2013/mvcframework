@@ -7,8 +7,8 @@ import java.lang.reflect.Method;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.mvc.annotation.AnnotationKey;
 import org.mvc.annotation.Ok;
-import org.mvc.util.AnnotationKey;
 
 /** 
 * @ClassName ActionHandler 

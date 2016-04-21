@@ -19,9 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.mvc.annotation.Action;
+import org.mvc.annotation.AnnotationKey;
 import org.mvc.handler.ActionHandler;
-import org.mvc.util.AnnotationKey;
 import org.mvc.util.ClassUtil;
+import org.mvc.util.MvcUtil;
 
 /**
  * @ClassName MainFilter
@@ -41,7 +42,6 @@ public class MainFilter implements Filter {
 	public void init(FilterConfig config) throws ServletException {
 		// 初始化请求处理类
 		actionHandler = new ActionHandler();
-
 		String relpath = config.getInitParameter("page");// 注解扫描路径，在web.xml中配置
 		relpath = relpath.replace(".", "/");
 		relpath = "/" + relpath;
@@ -90,6 +90,8 @@ public class MainFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
+		MvcUtil.set(request, response);
+		
 		String actionPath = request.getServletPath();
 		// 静态资源类型，不进行过滤处理
 		Pattern p = Pattern.compile(IGNORE);
