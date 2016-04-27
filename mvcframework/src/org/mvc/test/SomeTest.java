@@ -44,7 +44,11 @@ public class SomeTest{
 	}
 	
 	
-	
+	@Action(url="/mvc")
+	@Ok(url="->:/index.jsp")
+	public Object mvc(){
+		return MvcUtil.getURI();
+	}
 	
 	
 	
