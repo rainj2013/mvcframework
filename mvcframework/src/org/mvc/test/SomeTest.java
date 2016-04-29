@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 import org.mvc.annotation.Action;
+import org.mvc.annotation.Json;
 import org.mvc.annotation.Ok;
 import org.mvc.annotation.Param;
 import org.mvc.util.MvcUtil;
@@ -45,23 +46,15 @@ public class SomeTest{
 	
 	
 	@Action(url="/mvc")
-	@Ok(url="->:/index.jsp")
+	@Json
 	public Object mvc(){
-		return MvcUtil.getURI();
+		User user = new User();
+		user.setName("中文");
+		user.setAge(21);
+		user.setMale(true);
+		user.setMoney(10086.0);
+		return user;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
   private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";
 

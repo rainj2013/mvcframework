@@ -66,18 +66,24 @@ public class MainFilter implements Filter {
 		actions = new HashMap<>();
 		// 获取注解上url值，与对应的Annotation封装类AnnotationKey一起装进Map
 		for (Entry<AnnotationKey, Annotation[]> entry : annotations.entrySet()) {
+			
 			for (Annotation annotation : entry.getValue()) {
 				Class<? extends Annotation> annotationType = annotation.annotationType();
+				
 				if (annotationType.equals(Action.class)) {
 					String actionPath;
+					
 					try {
 						actionPath = (String) annotationType.getDeclaredMethod("url").invoke(annotation);
 						actions.put(actionPath, entry.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+					
 				}
+				
 			}
+			
 		}
 	}
 
@@ -107,15 +113,19 @@ public class MainFilter implements Filter {
 			return;
 		}
 		// 将请求转交给ActionHandler
-		String target = actionHandler.doAction(annotationKey, request);
-		String path = target.substring(target.indexOf(":") + 1);
+		String target = actionHandler.doAction(annotationKey, request, response);
+		if(target.equals("json"))
+			return;
+		String[] paths = target.split(":");
+		if(paths.length<2)
+			return;
 		// 判断请求返回类型
-		if (target.contains("->"))
+		if (paths[0].equals("->"))
 			// 内部重定向
-			request.getRequestDispatcher(path).forward(request, response);
-		else if (target.contains(">>"))
+			request.getRequestDispatcher(paths[1]).forward(request, response);
+		else if (paths[0].equals(">>"))
 			// 外部重定向
-			response.sendRedirect(path);
+			response.sendRedirect(paths[1]);
 
 	}
 

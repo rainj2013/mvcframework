@@ -6,8 +6,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.mvc.annotation.AnnotationKey;
+import org.mvc.annotation.Json;
 import org.mvc.annotation.Ok;
 
 /** 
@@ -26,7 +29,7 @@ public class ActionHandler {
 		methodHandler = new MethodHandler();
 	}
 
-	public String doAction(AnnotationKey annotationKey, HttpServletRequest request) {
+	public String doAction(AnnotationKey annotationKey, HttpServletRequest request,HttpServletResponse reponse) {
 		Class<?> clazz;//被请求映射的Action方法所在类对象
 		Method method;//被请求映射的Action方法
 		Object[] params = null;//方法参数
@@ -41,11 +44,22 @@ public class ActionHandler {
 				method = clazz.getDeclaredMethod(annotationKey.getMethodName());
 			}
 			obj = method.invoke(clazz.newInstance(), params);
-			target = getTarget(method);
+			//返回Json格式数据
+			if(null != method.getAnnotation(Json.class)){
+				ObjectMapper mapper = new ObjectMapper();
+				String json = mapper.writeValueAsString(obj);
+				reponse.getOutputStream().write(json.getBytes());
+				target = "json";
+			}else{
+			//将返回对象放在request域中
+				request.setAttribute("obj", obj);
+				target = getTarget(method);
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		request.setAttribute("obj", obj);
+		
 		return target;
 	}
 
