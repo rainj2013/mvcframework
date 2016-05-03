@@ -1,2 +1,2 @@
 # mvcframework
-A Java MVC framework by yu
+A Java MVC framework
