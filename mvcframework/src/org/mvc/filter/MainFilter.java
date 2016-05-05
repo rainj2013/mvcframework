@@ -3,7 +3,6 @@ package org.mvc.filter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -46,44 +45,62 @@ public class MainFilter implements Filter {
 		relpath = relpath.replace(".", "/");
 		relpath = "/" + relpath;
 		String abspath = this.getClass().getResource(relpath).getPath();
-		annotations = ClassUtil.getClassAnnotations(relpath, abspath);//获取扫描路径下所有类对象上面的注解
-		Iterator<Entry<AnnotationKey, Annotation[]>> iterator = annotations.entrySet().iterator();
+		annotations = ClassUtil.getClassAnnotations(relpath, abspath);// 获取扫描路径下所有类对象上面的注解
+
 		// 检查注解类型，只留下Action注解
-		while (iterator.hasNext()) {
-			Entry<AnnotationKey, Annotation[]> entry = iterator.next();
-			boolean flag = true;
-			Annotation[] ans = entry.getValue();
-			for (Annotation annotation : ans) {
-				if (annotation.annotationType().equals(Action.class)) {
-					flag = false;
-				}
-			}
-			if (flag) {
-				iterator.remove();
-			}
-		}
+		/*
+		 * Iterator<Entry<AnnotationKey, Annotation[]>> iterator =
+		 * annotations.entrySet().iterator(); while (iterator.hasNext()) {
+		 * Entry<AnnotationKey, Annotation[]> entry = iterator.next(); boolean
+		 * flag = true; Annotation[] ans = entry.getValue(); for (Annotation
+		 * annotation : ans) { if
+		 * (annotation.annotationType().equals(Action.class)) { flag = false; }
+		 * } if (flag) { iterator.remove(); } }
+		 */
 
 		actions = new HashMap<>();
+		Map<String, String> classActions = new HashMap<>();
+
 		// 获取注解上url值，与对应的Annotation封装类AnnotationKey一起装进Map
 		for (Entry<AnnotationKey, Annotation[]> entry : annotations.entrySet()) {
-			
+
 			for (Annotation annotation : entry.getValue()) {
 				Class<? extends Annotation> annotationType = annotation.annotationType();
-				
+
 				if (annotationType.equals(Action.class)) {
-					String actionPath;
-					
+					String actionPath = null;
 					try {
 						actionPath = (String) annotationType.getDeclaredMethod("url").invoke(annotation);
-						actions.put(actionPath, entry.getKey());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 					
+					AnnotationKey annotationKey = entry.getKey();
+					//如果Action注解没有值，就取类名/方法名
+					if(null==actionPath||actionPath.equals("")){
+						if (annotationKey.isMethod())
+							actionPath = "/"+annotationKey.getMethodName();
+						else{
+							actionPath = annotationKey.getClassName();
+							if(actionPath.contains("."))
+								actionPath = actionPath.substring(actionPath.lastIndexOf(".")+1);
+							actionPath="/"+actionPath;
+						}
+					}
+					
+					//最终映射路径为类上的Action注解+方法Action注解
+					String className = annotationKey.getClassName();
+					if (!annotationKey.isMethod())
+						classActions.put(className, actionPath);
+					else {
+						String parentPath = classActions.get(className);
+						if (parentPath != null)
+							actionPath = parentPath + actionPath;
+						actions.put(actionPath, entry.getKey());
+					}
 				}
 				
 			}
-			
 		}
 	}
 
@@ -97,7 +114,7 @@ public class MainFilter implements Filter {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
 		MvcUtil.set(request, response);
-		
+
 		String actionPath = request.getServletPath();
 		// 静态资源类型，不进行过滤处理
 		Pattern p = Pattern.compile(IGNORE);
@@ -106,6 +123,7 @@ public class MainFilter implements Filter {
 			chain.doFilter(request, response);
 		}
 		// 检测是否有改路径映射的Action，若无就直接返回404
+		System.out.println(actions);
 		AnnotationKey annotationKey = actions.get(actionPath);
 		if (annotationKey == null) {
 			response.setIntHeader("404", 404);
@@ -114,10 +132,10 @@ public class MainFilter implements Filter {
 		}
 		// 将请求转交给ActionHandler
 		String target = actionHandler.doAction(annotationKey, request, response);
-		if(target.equals("json"))
+		if (target.equals("json"))
 			return;
 		String[] paths = target.split(":");
-		if(paths.length<2)
+		if (paths.length < 2)
 			return;
 		// 判断请求返回类型
 		if (paths[0].equals("->"))

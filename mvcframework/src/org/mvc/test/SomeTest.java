@@ -10,6 +10,7 @@ import org.mvc.annotation.Ok;
 import org.mvc.annotation.Param;
 import org.mvc.util.MvcUtil;
 
+@Action
 public class SomeTest{
 	
 	@Action(url="/myAction")

@@ -4,9 +4,10 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.mvc.annotation.AnnotationKey;
 
@@ -63,13 +64,22 @@ public class ClassUtil {
 	 * @return 注解集合
 	 */
 	public static Map<AnnotationKey,Annotation[]> getClassAnnotations(String relpath,String abspath){
-		Map<AnnotationKey,Annotation[]> annotations = new HashMap<>();
+		//把类注解放在前面，这样地址映射的时候会先扫描类上面的注解,最终形成类注解地址+方法注解地址的映射方式
+		Map<AnnotationKey,Annotation[]> annotations = new TreeMap<>(new Comparator<AnnotationKey>() {
+			@Override
+			public int compare(AnnotationKey key1, AnnotationKey key2) {
+				if(!key1.isMethod()&&key2.isMethod())
+					return -1;
+				return 1;
+			}
+		});
+		
 		//先扫描所有class对象
 		List<String> classes = scanPackage(relpath,abspath);
 		//获取所有class对象上的注解信息
 		for(String classPath:classes){
-			annotations.putAll(AnnotationUtil.getAnnotations(classPath));
-		}
+				annotations.putAll(AnnotationUtil.getAnnotations(classPath));
+			}
 		return annotations;
 	}
 }
