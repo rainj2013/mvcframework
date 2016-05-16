@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.mvc.annotation.Action;
 import org.mvc.annotation.AnnotationKey;
+import org.mvc.annotation.UploadConfig;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
 import org.mvc.util.MvcUtil;
@@ -67,6 +68,7 @@ public class MainFilter implements Filter {
 			for (Annotation annotation : entry.getValue()) {
 				Class<? extends Annotation> annotationType = annotation.annotationType();
 
+				AnnotationKey annotationKey = entry.getKey();
 				if (annotationType.equals(Action.class)) {
 					String actionPath = null;
 					try {
@@ -75,7 +77,6 @@ public class MainFilter implements Filter {
 						e.printStackTrace();
 					}
 					
-					AnnotationKey annotationKey = entry.getKey();
 					//如果Action注解没有值，就取类名/方法名
 					if(null==actionPath||actionPath.equals("")){
 						if (annotationKey.isMethod())
@@ -96,8 +97,16 @@ public class MainFilter implements Filter {
 						String parentPath = classActions.get(className);
 						if (parentPath != null)
 							actionPath = parentPath + actionPath;
-						actions.put(actionPath, entry.getKey());
+						actions.put(actionPath, annotationKey);
 					}
+				}else if(annotationType.equals(UploadConfig.class)){
+					String uploadconf = null;
+					try {
+						uploadconf = (String) annotationType.getDeclaredMethod("uploadConfig").invoke(annotation);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					annotationKey.setUploadconf(uploadconf);
 				}
 				
 			}
@@ -123,7 +132,6 @@ public class MainFilter implements Filter {
 			chain.doFilter(request, response);
 		}
 		// 检测是否有改路径映射的Action，若无就直接返回404
-		System.out.println(actions);
 		AnnotationKey annotationKey = actions.get(actionPath);
 		if (annotationKey == null) {
 			response.setIntHeader("404", 404);

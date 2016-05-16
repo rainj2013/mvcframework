@@ -9,6 +9,14 @@ public class AnnotationKey {
 	//把参数类型排列成字符串吧，才能安全计算hashcode =。=
 	private String paramStrings;
 	
+	private String uploadconf;
+	
+	public String getUploadconf() {
+		return uploadconf;
+	}
+	public void setUploadconf(String uploadconf) {
+		this.uploadconf = uploadconf;
+	}
 	public boolean isMethod() {
 		return method;
 	}

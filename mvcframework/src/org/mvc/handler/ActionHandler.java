@@ -1,5 +1,7 @@
 package org.mvc.handler;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +10,7 @@ import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mvc.annotation.AnnotationKey;
 import org.mvc.annotation.Json;
@@ -39,7 +42,13 @@ public class ActionHandler {
 			clazz = Class.forName(annotationKey.getClassName());
 			if (null != annotationKey.getParamTypes()) {
 				method = clazz.getDeclaredMethod(annotationKey.getMethodName(), annotationKey.getParamTypes());
-				getParams(params, method, request);
+			//普通请求跟上传请求的参数获取方式分开吧
+				String conf = annotationKey.getUploadconf();
+				if(conf!=null)
+					System.out.println();
+				else
+					getParams(params, method, request);
+				
 			} else {
 				method = clazz.getDeclaredMethod(annotationKey.getMethodName());
 			}
@@ -79,7 +88,7 @@ public class ActionHandler {
 	private Object[] getParams(Object[] params, Method method, HttpServletRequest request)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, InstantiationException {
-		params = methodHandler.getParams(method);
+		params = methodHandler.getParams(method);//@Param
 		
 		//当接收参数key为 ".." 时将接收到的参数封装到一个bean里
 		if (params.length == 1 && "..".equals(params[0])) {
@@ -126,6 +135,21 @@ public class ActionHandler {
 		return params;
 	}
 
+	private Object[] getParams(String conf, Object[] params, Method method, HttpServletRequest request) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		params = methodHandler.getParams(method);
+		File file = new File(conf);
+		//TODO
+		for (int i = 0; i < params.length; i++) {
+			if (null == params[i])
+				break;
+			if(params[i] instanceof File){
+				DiskFileItemFactory factory = new DiskFileItemFactory();
+				
+			}
+		}
+		return params;
+	}
+	
 	/**
 	 * 获取Action方法上配置的请求返回地址
 	 * @param method Action方法
