@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.mvc.annotation.Action;
 import org.mvc.annotation.AnnotationKey;
-import org.mvc.annotation.UploadConfig;
+import org.mvc.annotation.Upload;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
 import org.mvc.util.MvcUtil;
@@ -99,10 +99,10 @@ public class MainFilter implements Filter {
 							actionPath = parentPath + actionPath;
 						actions.put(actionPath, annotationKey);
 					}
-				}else if(annotationType.equals(UploadConfig.class)){
+				}else if(annotationType.equals(Upload.class)){
 					String uploadconf = null;
 					try {
-						uploadconf = (String) annotationType.getDeclaredMethod("uploadConfig").invoke(annotation);
+						uploadconf = (String) annotationType.getDeclaredMethod("conf").invoke(annotation);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

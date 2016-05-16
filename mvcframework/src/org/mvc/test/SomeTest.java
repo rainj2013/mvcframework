@@ -8,9 +8,11 @@ import org.mvc.annotation.Action;
 import org.mvc.annotation.Json;
 import org.mvc.annotation.Ok;
 import org.mvc.annotation.Param;
+import org.mvc.annotation.Upload;
+import org.mvc.upload.TempFile;
 import org.mvc.util.MvcUtil;
 
-@Action
+@Action(url = "/test")
 public class SomeTest{
 	
 	@Action(url="/myAction")
@@ -55,6 +57,14 @@ public class SomeTest{
 		user.setMale(true);
 		user.setMoney(10086.0);
 		return user;
+	}
+	
+	
+	@Action
+	@Upload(conf = "/config.js")
+	@Ok(url = "->:/index.jsp")
+	public String upload(@Param("file") TempFile tf){
+		return tf.getPath();
 	}
 	
   private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";

@@ -1,82 +1,95 @@
 package org.mvc.handler;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mvc.annotation.AnnotationKey;
 import org.mvc.annotation.Json;
 import org.mvc.annotation.Ok;
+import org.mvc.upload.TempFile;
+import org.mvc.util.FileUtil;
+import org.mvc.util.Strings;
 
-/** 
-* @ClassName ActionHandler 
-* @Description 请求处理类，用于处理请求 
-* @author rainj2013 yangyujian25@gmail.com
-* @date 2016年4月20日 下午2:53:10 
-*  
-*/ 
+/**
+ * @ClassName ActionHandler
+ * @Description 请求处理类，用于处理请求
+ * @author rainj2013 yangyujian25@gmail.com
+ * @date 2016年4月20日 下午2:53:10
+ * 
+ */
 public class ActionHandler {
-	
+
 	private MethodHandler methodHandler;
-	
+
 	public ActionHandler() {
 		super();
 		methodHandler = new MethodHandler();
 	}
 
-	public String doAction(AnnotationKey annotationKey, HttpServletRequest request,HttpServletResponse reponse) {
-		Class<?> clazz;//被请求映射的Action方法所在类对象
-		Method method;//被请求映射的Action方法
-		Object[] params = null;//方法参数
-		Object obj = null;//方法返回结果
-		String target = null;//请求返回路径
+	public String doAction(AnnotationKey annotationKey, HttpServletRequest request, HttpServletResponse reponse) {
+		Class<?> clazz;// 被请求映射的Action方法所在类对象
+		Method method;// 被请求映射的Action方法
+		Object[] params = null;// 方法参数
+		Object obj = null;// 方法返回结果
+		String target = null;// 请求返回路径
 		try {
 			clazz = Class.forName(annotationKey.getClassName());
 			if (null != annotationKey.getParamTypes()) {
 				method = clazz.getDeclaredMethod(annotationKey.getMethodName(), annotationKey.getParamTypes());
-			//普通请求跟上传请求的参数获取方式分开吧
+				// 普通请求跟上传请求的参数获取方式分开吧
 				String conf = annotationKey.getUploadconf();
-				if(conf!=null)
-					System.out.println();
+				if (conf != null)
+					params = getParams(conf, params, method, request);
 				else
-					getParams(params, method, request);
-				
+					params = getParams(params, method, request);
+
 			} else {
 				method = clazz.getDeclaredMethod(annotationKey.getMethodName());
 			}
 			obj = method.invoke(clazz.newInstance(), params);
-			//返回Json格式数据
-			if(null != method.getAnnotation(Json.class)){
+			// 返回Json格式数据
+			if (null != method.getAnnotation(Json.class)) {
 				ObjectMapper mapper = new ObjectMapper();
 				String json = mapper.writeValueAsString(obj);
 				reponse.getOutputStream().write(json.getBytes());
 				target = "json";
-			}else{
-			//将返回对象放在request域中
+			} else {
+				// 将返回对象放在request域中
 				request.setAttribute("obj", obj);
 				target = getTarget(method);
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return target;
 	}
 
 	/**
 	 * 将请求参数封装到数组或者bean对象
-	 * @param params 保存Action方法参数的数组
-	 * @param method Action方法
-	 * @param request 请求的request对象
+	 * 
+	 * @param params
+	 *            保存Action方法参数的数组
+	 * @param method
+	 *            Action方法
+	 * @param request
+	 *            请求的request对象
 	 * @return 保存Action方法参数的数组
 	 * @throws NoSuchMethodException
 	 * @throws SecurityException
@@ -88,11 +101,10 @@ public class ActionHandler {
 	private Object[] getParams(Object[] params, Method method, HttpServletRequest request)
 			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, InstantiationException {
-		params = methodHandler.getParams(method);//@Param
-		
-		//当接收参数key为 ".." 时将接收到的参数封装到一个bean里
+		params = methodHandler.getParams(method);// @Param
+		// 当接收参数key为 ".." 时将接收到的参数封装到一个bean里
 		if (params.length == 1 && "..".equals(params[0])) {
-			Class<?> clazz = method.getParameterTypes()[0];//bean的类对象
+			Class<?> clazz = method.getParameterTypes()[0];// bean的类对象
 			Object form = clazz.newInstance();
 			Field[] fields = clazz.getDeclaredFields();
 
@@ -135,24 +147,80 @@ public class ActionHandler {
 		return params;
 	}
 
-	private Object[] getParams(String conf, Object[] params, Method method, HttpServletRequest request) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+	private Object[] getParams(String conf, Object[] params, Method method, HttpServletRequest request)
+			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
+			InvocationTargetException {
 		params = methodHandler.getParams(method);
-		File file = new File(conf);
-		//TODO
-		for (int i = 0; i < params.length; i++) {
-			if (null == params[i])
-				break;
-			if(params[i] instanceof File){
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-				
+		File file = new File(conf);// 配置文件
+		Map<String, String> config;
+		String tempPath = null;// 文件暂存路劲
+		try {
+			config = FileUtil.readConfig(file);
+			tempPath = config.get("path");
+		} catch (IOException e) {
+			// 读取配置文件失败
+			e.printStackTrace();
+		}
+
+		DiskFileItemFactory factory = new DiskFileItemFactory();
+		factory.setRepository(new File(tempPath));
+		ServletFileUpload upload = new ServletFileUpload(factory);
+		List<FileItem> items = null;
+		try {
+			items = upload.parseRequest(request);
+			Iterator<FileItem> iter = items.iterator();
+			while (iter.hasNext()) {
+				FileItem item = iter.next();
+				int index = getParamsIndex(params, item);
+				if (item.isFormField()) {
+					params[index] = item.getString();
+				} else {
+					params[index] = processUploadedFile(item, tempPath);
+				}
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (FileUploadException e) {
+			e.printStackTrace();
 		}
 		return params;
 	}
-	
+
+	private int getParamsIndex(Object[] params, FileItem item) {
+		int i = 0;
+		for (; i < params.length; i++) {
+			if (params[i].equals(item.getFieldName())) {
+				break;
+			}
+		}
+		return i;
+	}
+
+	private TempFile processUploadedFile(FileItem item, String tempPath) throws IOException {
+		String fieldName = item.getFieldName();
+		String fileName = item.getName();
+		String contentType = item.getContentType();
+		boolean isInMemory = item.isInMemory();
+		long sizeInBytes = item.getSize();
+
+		String path = tempPath + "/" + Strings.randomString();
+		FileUtil.writeToFile(item.getInputStream(), path);
+
+		TempFile tempFile = new TempFile(path);
+		tempFile.setFieldName(fieldName);
+		tempFile.setFileName(fileName);
+		tempFile.setContentType(contentType);
+		tempFile.setInMemory(isInMemory);
+		tempFile.setSizeInBytes(sizeInBytes);
+
+		return tempFile;
+	}
+
 	/**
 	 * 获取Action方法上配置的请求返回地址
-	 * @param method Action方法
+	 * 
+	 * @param method
+	 *            Action方法
 	 * @return 请求返回地址
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
