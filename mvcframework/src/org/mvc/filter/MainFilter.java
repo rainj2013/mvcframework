@@ -140,7 +140,7 @@ public class MainFilter implements Filter {
 		}
 		// 将请求转交给ActionHandler
 		String target = actionHandler.doAction(annotationKey, request, response);
-		if (target.equals("json"))
+		if (target==null||target.equals("json"))
 			return;
 		String[] paths = target.split(":");
 		if (paths.length < 2)

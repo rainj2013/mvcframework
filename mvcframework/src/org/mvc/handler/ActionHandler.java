@@ -9,6 +9,8 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -76,6 +78,7 @@ public class ActionHandler {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 
 		return target;
@@ -148,15 +151,18 @@ public class ActionHandler {
 	}
 
 	private Object[] getParams(String conf, Object[] params, Method method, HttpServletRequest request)
-			throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
+			throws Exception {
 		params = methodHandler.getParams(method);
 		File file = new File(conf);// 配置文件
 		Map<String, String> config;
-		String tempPath = null;// 文件暂存路劲
+		String tempPath = null;// 文件暂存路径
+		String maxFileSize = null;
+		String nameFilter = null;
 		try {
 			config = FileUtil.readConfig(file);
 			tempPath = config.get("path");
+			maxFileSize = config.get("maxFileSize");
+			nameFilter = config.get("nameFilter");
 		} catch (IOException e) {
 			// 读取配置文件失败
 			e.printStackTrace();
@@ -175,7 +181,7 @@ public class ActionHandler {
 				if (item.isFormField()) {
 					params[index] = item.getString();
 				} else {
-					params[index] = processUploadedFile(item, tempPath);
+					params[index] = processUploadedFile(item, tempPath,maxFileSize,nameFilter);
 				}
 			}
 		} catch (IOException e) {
@@ -196,13 +202,26 @@ public class ActionHandler {
 		return i;
 	}
 
-	private TempFile processUploadedFile(FileItem item, String tempPath) throws IOException {
+	private TempFile processUploadedFile(FileItem item, String tempPath,String maxFileSize,String nameFilter) throws Exception {
 		String fieldName = item.getFieldName();
 		String fileName = item.getName();
 		String contentType = item.getContentType();
 		boolean isInMemory = item.isInMemory();
 		long sizeInBytes = item.getSize();
-
+		int maxSize = -1;
+		if(null!=maxFileSize){
+			maxSize = Integer.parseInt(maxFileSize);
+		}
+		if(maxSize!=-1&&sizeInBytes>maxSize){
+			throw new Exception("文件大小超过限制！");
+		}
+		if(null != nameFilter){
+			Pattern pattern = Pattern.compile(nameFilter);
+			Matcher macher = pattern.matcher(fileName);
+			if(!macher.find())
+				throw new Exception("不允许上传的文件格式！");
+		}
+		
 		String path = tempPath + "/" + Strings.randomString();
 		FileUtil.writeToFile(item.getInputStream(), path);
 
