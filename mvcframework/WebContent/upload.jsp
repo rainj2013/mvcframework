@@ -6,7 +6,9 @@
 </head>
 <body>
 <form method="POST" enctype="multipart/form-data" action="/mvcframework/test/upload">
-<input type="file" name="file"><br/>
+<input name="description">
+<input type="file" name="file1"><br/>
+<input type="file" name="file2"><br/>
 <input type="submit" value="提交"> 
 </form>
 </body>

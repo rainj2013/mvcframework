@@ -63,8 +63,8 @@ public class SomeTest{
 	@Action
 	@Upload(conf = "/config.js")
 	@Ok(url = "->:/index.jsp")
-	public String upload(@Param("file") TempFile tf){
-		return tf.getPath();
+	public String upload(@Param("file1") TempFile tf1,@Param("file2") TempFile tf2,@Param("description") String description){
+		return tf1.getPath()+"<br>"+tf2.getPath()+"<br>"+description;
 	}
 	
   private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";

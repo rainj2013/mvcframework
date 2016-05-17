@@ -158,11 +158,13 @@ public class ActionHandler {
 		String tempPath = null;// 文件暂存路径
 		String maxFileSize = null;
 		String nameFilter = null;
+		String charset = null;
 		try {
 			config = FileUtil.readConfig(file);
 			tempPath = config.get("path");
 			maxFileSize = config.get("maxFileSize");
 			nameFilter = config.get("nameFilter");
+			charset = null==config.get("charset")?System.getProperty("file.encoding"):config.get("charset");
 		} catch (IOException e) {
 			// 读取配置文件失败
 			e.printStackTrace();
@@ -179,7 +181,7 @@ public class ActionHandler {
 				FileItem item = iter.next();
 				int index = getParamsIndex(params, item);
 				if (item.isFormField()) {
-					params[index] = item.getString();
+					params[index] = item.getString(charset);
 				} else {
 					params[index] = processUploadedFile(item, tempPath,maxFileSize,nameFilter);
 				}
@@ -209,6 +211,10 @@ public class ActionHandler {
 		boolean isInMemory = item.isInMemory();
 		long sizeInBytes = item.getSize();
 		int maxSize = -1;
+		
+		if(null==tempPath){
+			throw new Exception("配置错误：文件暂存路径不存在！");
+		}
 		if(null!=maxFileSize){
 			maxSize = Integer.parseInt(maxFileSize);
 		}
