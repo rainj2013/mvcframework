@@ -25,7 +25,7 @@ import org.mvc.annotation.Json;
 import org.mvc.annotation.Ok;
 import org.mvc.upload.TempFile;
 import org.mvc.util.FileUtil;
-import org.mvc.util.Strings;
+import org.mvc.util.StringUtil;
 
 /**
  * @ClassName ActionHandler
@@ -225,7 +225,7 @@ public class ActionHandler {
 				throw new Exception("不允许上传的文件格式！");
 		}
 		
-		String path = tempPath + "/" + Strings.randomString();
+		String path = tempPath + "/" + StringUtil.randomString();
 		FileUtil.writeToFile(item.getInputStream(), path);
 
 		TempFile tempFile = new TempFile(path);
