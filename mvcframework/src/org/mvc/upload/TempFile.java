@@ -6,8 +6,8 @@ package org.mvc.upload;
 import java.io.File;
 
 /**
- * @ClassName UploadConfig
- * @Description 上传配置文件
+ * @ClassName TempFile
+ * @Description 上传的文件
  * @author rainj2013 yangyujian25@gmail.com
  * @date 2016年5月16日 下午5:47:26
  * 

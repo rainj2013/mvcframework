@@ -9,7 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /** 
-* @ClassName UploadConfig 
+* @ClassName Upload 
 * @Description 上传配置 
 * @author rainj2013 yangyujian25@gmail.com
 * @date 2016年5月16日 下午4:35:52 

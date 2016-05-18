@@ -9,7 +9,6 @@ import org.mvc.util.AnnotationUtil;
 
 public class MethodHandler {
 	
-	
 	/**
 	  * 获取Action方法上接收的请求参数
 	 * @param method 方法类对象

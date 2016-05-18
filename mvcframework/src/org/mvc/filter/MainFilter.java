@@ -38,6 +38,9 @@ public class MainFilter implements Filter {
 	private ActionHandler actionHandler;
 	private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";
 
+	/* 
+	 * 初始化，扫描包，分析注解等
+	 */
 	@Override
 	public void init(FilterConfig config) throws ServletException {
 		// 初始化请求处理类
@@ -47,17 +50,6 @@ public class MainFilter implements Filter {
 		relpath = "/" + relpath;
 		String abspath = this.getClass().getResource(relpath).getPath();
 		annotations = ClassUtil.getClassAnnotations(relpath, abspath);// 获取扫描路径下所有类对象上面的注解
-
-		// 检查注解类型，只留下Action注解
-		/*
-		 * Iterator<Entry<AnnotationKey, Annotation[]>> iterator =
-		 * annotations.entrySet().iterator(); while (iterator.hasNext()) {
-		 * Entry<AnnotationKey, Annotation[]> entry = iterator.next(); boolean
-		 * flag = true; Annotation[] ans = entry.getValue(); for (Annotation
-		 * annotation : ans) { if
-		 * (annotation.annotationType().equals(Action.class)) { flag = false; }
-		 * } if (flag) { iterator.remove(); } }
-		 */
 
 		actions = new HashMap<>();
 		Map<String, String> classActions = new HashMap<>();
@@ -99,7 +91,8 @@ public class MainFilter implements Filter {
 							actionPath = parentPath + actionPath;
 						actions.put(actionPath, annotationKey);
 					}
-				}else if(annotationType.equals(Upload.class)){
+					
+				}else if(annotationType.equals(Upload.class)){//上传文件的请求
 					String uploadconf = null;
 					try {
 						uploadconf = (String) annotationType.getDeclaredMethod("conf").invoke(annotation);

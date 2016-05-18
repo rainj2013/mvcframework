@@ -37,10 +37,11 @@ import org.mvc.util.Strings;
 public class ActionHandler {
 
 	private MethodHandler methodHandler;
-
+	private DiskFileItemFactory factory;
 	public ActionHandler() {
 		super();
 		methodHandler = new MethodHandler();
+		factory = new DiskFileItemFactory();
 	}
 
 	public String doAction(AnnotationKey annotationKey, HttpServletRequest request, HttpServletResponse reponse) {
@@ -156,9 +157,9 @@ public class ActionHandler {
 		File file = new File(conf);// 配置文件
 		Map<String, String> config;
 		String tempPath = null;// 文件暂存路径
-		String maxFileSize = null;
-		String nameFilter = null;
-		String charset = null;
+		String maxFileSize = null;//文件大小上限
+		String nameFilter = null;//允许上传的扩展名列表
+		String charset = null;//解析非文件表单项的字符集
 		try {
 			config = FileUtil.readConfig(file);
 			tempPath = config.get("path");
@@ -166,11 +167,9 @@ public class ActionHandler {
 			nameFilter = config.get("nameFilter");
 			charset = null==config.get("charset")?System.getProperty("file.encoding"):config.get("charset");
 		} catch (IOException e) {
-			// 读取配置文件失败
-			e.printStackTrace();
+			throw new Exception("读取配置文件失败");
 		}
-
-		DiskFileItemFactory factory = new DiskFileItemFactory();
+		
 		factory.setRepository(new File(tempPath));
 		ServletFileUpload upload = new ServletFileUpload(factory);
 		List<FileItem> items = null;
@@ -186,10 +185,8 @@ public class ActionHandler {
 					params[index] = processUploadedFile(item, tempPath,maxFileSize,nameFilter);
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (FileUploadException e) {
-			e.printStackTrace();
+			throw new Exception("解析上传文件失败！");
 		}
 		return params;
 	}
