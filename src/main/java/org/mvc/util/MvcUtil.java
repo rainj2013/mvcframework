@@ -58,7 +58,7 @@ public class MvcUtil {
 		return threadLocal.get();
 	}
 
-	public static void releaseData(){
+	public static void releaseData() {
 		threadLocal.set(null);
 	}
 }
