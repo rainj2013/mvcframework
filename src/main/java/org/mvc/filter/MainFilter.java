@@ -17,6 +17,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mvc.Context;
 import org.mvc.annotation.Action;
 import org.mvc.annotation.AnnotationKey;
 import org.mvc.annotation.Upload;
@@ -133,6 +134,7 @@ public class MainFilter implements Filter {
 		}
 		// 将请求转交给ActionHandler
 		String target = actionHandler.doAction(annotationKey, request, response);
+		MvcUtil.releaseData();//返回时就把threadlocal清空了吧，防止内存泄露
 		if (target==null||target.equals("json"))
 			return;
 		String[] paths = target.split(":");
