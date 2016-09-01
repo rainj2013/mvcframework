@@ -124,6 +124,7 @@ public class MainFilter implements Filter {
 		Matcher m = p.matcher(actionPath);
 		if (m.find()) {
 			chain.doFilter(request, response);
+			return;
 		}
 		// 检测是否有改路径映射的Action，若无就直接返回404
 		AnnotationKey annotationKey = actions.get(actionPath);
