@@ -116,7 +116,6 @@ public class MainFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) resp;
-		MvcUtil.set(request, response);
 
 		String actionPath = request.getServletPath();
 		// 静态资源类型，不进行过滤处理
@@ -133,6 +132,7 @@ public class MainFilter implements Filter {
 			chain.doFilter(request, response);
 			return;
 		}
+		MvcUtil.set(request, response);
 		// 将请求转交给ActionHandler
 		String target = actionHandler.doAction(annotationKey, request, response);
 		MvcUtil.releaseData();//返回时就把threadlocal清空了吧，防止内存泄露
