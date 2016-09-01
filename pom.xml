@@ -5,7 +5,7 @@
 	<artifactId>mvcframework</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mvcframework2 Maven Webapp</name>
+	<name>mvcframework Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 	<dependencies>
 		<dependency>
@@ -41,8 +41,24 @@
 			<artifactId>jackson-mapper-asl</artifactId>
 			<version>1.9.4</version>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>RELEASE</version>
+		</dependency>
 	</dependencies>
 	<build>
-		<finalName>mvcframework2</finalName>
+		<finalName>mvcframework</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 </project>
