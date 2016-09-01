@@ -186,7 +186,7 @@ public class ActionHandler {
 				}
 			}
 		} catch (FileUploadException e) {
-			throw new Exception("解析上传文件失败！");
+			throw new Exception("解析上传文件失败！"+e.getMessage());
 		}
 		return params;
 	}
