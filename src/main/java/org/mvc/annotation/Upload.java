@@ -17,5 +17,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Upload {
-    String conf() default "config.js";
+    String value() default "/config.js";
 }

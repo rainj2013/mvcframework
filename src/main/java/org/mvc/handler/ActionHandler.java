@@ -141,17 +141,16 @@ public class ActionHandler {
         return params;
     }
 
-    private Object[] getParams(String conf, Object[] params, Method method, HttpServletRequest request)
+    private Object[] getParams(String confPath, Object[] params, Method method, HttpServletRequest request)
             throws Exception {
         params = methodHandler.getParams(method);
-        File file = new File(conf);// 配置文件
         Map<String, String> config;
         String tempPath = null;// 文件暂存路径
         String maxFileSize = null;//文件大小上限
         String nameFilter = null;//允许上传的扩展名列表
         String charset = null;//解析非文件表单项的字符集
         try {
-            config = FileUtil.readConfig(file);
+            config = FileUtil.readConfig(confPath);
             tempPath = config.get("path");
             maxFileSize = config.get("maxFileSize");
             nameFilter = config.get("nameFilter");

@@ -11,8 +11,8 @@ import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class FileUtil {
-    public static Map<String, String> readConfig(File file) throws IOException {
-        InputStream ins = FileUtil.class.getResourceAsStream(file.toString());
+    public static Map<String, String> readConfig(String filePath) throws IOException {
+        InputStream ins = FileUtil.class.getResourceAsStream(filePath);
         StringBuffer sb = new StringBuffer();
         byte[] buffer = new byte[4096];
         int length;

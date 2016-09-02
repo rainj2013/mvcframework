@@ -1,5 +1,6 @@
 package org.mvc.test;
 
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,6 +11,7 @@ import org.mvc.annotation.Ok;
 import org.mvc.annotation.Param;
 import org.mvc.annotation.Upload;
 import org.mvc.upload.TempFile;
+import org.mvc.util.FileUtil;
 import org.mvc.util.MvcUtil;
 
 @Action("/test")
@@ -61,7 +63,7 @@ public class SomeTest {
 
 
     @Action
-    @Upload(conf = "/config.js")
+    @Upload("/config.js")
     @Ok("->:/index.jsp")
     public String upload(@Param("file1") TempFile tf1, @Param("file2") TempFile tf2, @Param("description") String description) {
         return tf1.getPath() + "<br>" + tf2.getPath() + "<br>" + description;
@@ -77,5 +79,14 @@ public class SomeTest {
             System.out.println("pass");
         else
             System.out.println("filter");
+    }
+
+    @Test
+    public  void  ReadConfigTest(){
+        try {
+            System.out.println(FileUtil.readConfig("/config.js"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
