@@ -64,7 +64,7 @@ public class MainFilter implements Filter {
 				if (annotationType.equals(Action.class)) {
 					String actionPath = null;
 					try {
-						actionPath = (String) annotationType.getDeclaredMethod("url").invoke(annotation);
+						actionPath = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
