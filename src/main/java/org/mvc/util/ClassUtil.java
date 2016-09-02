@@ -21,7 +21,7 @@ public class ClassUtil {
      * @param abspath 绝对路径
      * @return 保存class文件路径的容器
      */
-    public static List<String> getClasses(List<String> list, String relpath, String abspath) {
+    private static List<String> getClasses(List<String> list, String relpath, String abspath) {
         File root = new File(abspath);
         if (root.isDirectory()) {
             File[] files = root.listFiles(classFilter);
@@ -39,7 +39,7 @@ public class ClassUtil {
     }
 
     //一个文件过滤器，用来过滤class文件
-    static FilenameFilter classFilter = new FilenameFilter() {
+    private static FilenameFilter classFilter = new FilenameFilter() {
         @Override
         public boolean accept(File dir, String name) {
             if (dir.isDirectory())
@@ -58,7 +58,7 @@ public class ClassUtil {
      * @param abspath 绝对路径
      * @return
      */
-    public static List<String> scanPackage(String relpath, String abspath) {
+    private static List<String> scanPackage(String relpath, String abspath) {
         List<String> list = new ArrayList<>();
         getClasses(list, relpath, abspath);
         return list;

@@ -25,6 +25,7 @@ import org.mvc.annotation.Upload;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
 import org.mvc.util.MvcUtil;
+import org.mvc.util.StringUtil;
 
 /**
  * @ClassName MainFilter
@@ -39,6 +40,8 @@ public class MainFilter implements Filter {
 	private Map<String, AnnotationKey> actions;
 	private ActionHandler actionHandler;
 	private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";
+	private Pattern pattern = Pattern.compile(IGNORE);
+	private Matcher matcher;
 
 	/* 
 	 * 初始化，扫描包，分析注解等
@@ -131,9 +134,8 @@ public class MainFilter implements Filter {
 
 		String actionPath = request.getServletPath();
 		// 静态资源类型，不进行过滤处理
-		Pattern p = Pattern.compile(IGNORE);
-		Matcher m = p.matcher(actionPath);
-		if (m.find()) {
+		matcher = pattern.matcher(actionPath);
+		if (matcher.find()) {
 			chain.doFilter(request, response);
 			return;
 		}
@@ -149,7 +151,7 @@ public class MainFilter implements Filter {
 		actionHandler.doAction(annotationKey, request, response);
 		MvcUtil.releaseData();//返回时就把threadlocal清空了吧，防止内存泄露
 		String targetURI = annotationKey.getTargetURI();
-		if (targetURI==null||targetURI.equals("json"))
+		if (StringUtil.isBlank(targetURI))
 			return;
 		String[] paths = targetURI.split(":");
 		if (paths.length < 2)

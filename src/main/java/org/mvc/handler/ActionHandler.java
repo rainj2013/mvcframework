@@ -2,7 +2,6 @@ package org.mvc.handler;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,7 +21,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mvc.annotation.AnnotationKey;
 import org.mvc.annotation.Json;
-import org.mvc.annotation.Ok;
 import org.mvc.upload.TempFile;
 import org.mvc.util.FileUtil;
 import org.mvc.util.StringUtil;
@@ -49,7 +47,6 @@ public class ActionHandler {
 		Method method;// 被请求映射的Action方法
 		Object[] params = null;// 方法参数
 		Object obj = null;// 方法返回结果
-		String target = null;// 请求返回路径
 		try {
 			clazz = Class.forName(annotationKey.getClassName());
 			if (null != annotationKey.getParamTypes()) {
@@ -70,7 +67,6 @@ public class ActionHandler {
 				ObjectMapper mapper = new ObjectMapper();
 				String json = mapper.writeValueAsString(obj);
 				reponse.getOutputStream().write(json.getBytes());
-				target = "json";
 			} else {
 				// 将返回对象放在request域中
 				request.setAttribute("obj", obj);
@@ -176,6 +172,8 @@ public class ActionHandler {
 			while (iter.hasNext()) {
 				FileItem item = iter.next();
 				int index = getParamsIndex(params, item);
+				if(index==-1)
+					continue;
 				if (item.isFormField()) {
 					params[index] = item.getString(charset);
 				} else {
@@ -189,13 +187,12 @@ public class ActionHandler {
 	}
 
 	private int getParamsIndex(Object[] params, FileItem item) {
-		int i = 0;
-		for (; i < params.length; i++) {
+		for (int i = 0; i < params.length; i++) {
 			if (params[i].equals(item.getFieldName())) {
-				break;
+				return i;
 			}
 		}
-		return i;
+		return -1;
 	}
 
 	private TempFile processUploadedFile(FileItem item, String tempPath,String maxFileSize,String nameFilter) throws Exception {
