@@ -255,7 +255,7 @@ public class ActionHandler {
 		Annotation annotation = method.getAnnotation(Ok.class);
 		if (annotation == null)
 			return null;
-		String url = (String) annotation.annotationType().getDeclaredMethod("url").invoke(annotation);
+		String url = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
 		return url;
 	}
 }
