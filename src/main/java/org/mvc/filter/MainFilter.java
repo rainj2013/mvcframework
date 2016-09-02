@@ -2,6 +2,7 @@ package org.mvc.filter;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.mvc.annotation.Action;
 import org.mvc.annotation.AnnotationKey;
+import org.mvc.annotation.Ok;
 import org.mvc.annotation.Upload;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
@@ -59,7 +61,6 @@ public class MainFilter implements Filter {
 
 			for (Annotation annotation : entry.getValue()) {
 				Class<? extends Annotation> annotationType = annotation.annotationType();
-
 				AnnotationKey annotationKey = entry.getKey();
 				if (annotationType.equals(Action.class)) {
 					String actionPath = null;
@@ -91,8 +92,8 @@ public class MainFilter implements Filter {
 							actionPath = parentPath + actionPath;
 						actions.put(actionPath, annotationKey);
 					}
-					
-				}else if(annotationType.equals(Upload.class)){//上传文件的请求
+				//上传文件的请求
+				}else if(annotationType.equals(Upload.class)){
 					String uploadconf = null;
 					try {
 						uploadconf = (String) annotationType.getDeclaredMethod("conf").invoke(annotation);
@@ -100,6 +101,18 @@ public class MainFilter implements Filter {
 						e.printStackTrace();
 					}
 					annotationKey.setUploadconf(uploadconf);
+				//跳转地址
+				}else if(annotationType.equals(Ok.class)){
+					try {
+						String targetURI = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
+						annotationKey.setTargetURI(targetURI);
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					} catch (NoSuchMethodException e) {
+						e.printStackTrace();
+					}
 				}
 				
 			}
@@ -133,11 +146,12 @@ public class MainFilter implements Filter {
 		}
 		MvcUtil.set(request, response);
 		// 将请求转交给ActionHandler
-		String target = actionHandler.doAction(annotationKey, request, response);
+		actionHandler.doAction(annotationKey, request, response);
 		MvcUtil.releaseData();//返回时就把threadlocal清空了吧，防止内存泄露
-		if (target==null||target.equals("json"))
+		String targetURI = annotationKey.getTargetURI();
+		if (targetURI==null||targetURI.equals("json"))
 			return;
-		String[] paths = target.split(":");
+		String[] paths = targetURI.split(":");
 		if (paths.length < 2)
 			return;
 		// 判断请求返回类型

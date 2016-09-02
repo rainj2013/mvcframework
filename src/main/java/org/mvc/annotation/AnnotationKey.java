@@ -10,7 +10,8 @@ public class AnnotationKey {
 	private String paramStrings;
 	
 	private String uploadconf;
-	
+	private String targetURI;
+
 	public String getUploadconf() {
 		return uploadconf;
 	}
@@ -41,6 +42,13 @@ public class AnnotationKey {
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
 	}
+	public String getTargetURI() {
+		return targetURI;
+	}
+	public void setTargetURI(String targetURI) {
+		this.targetURI = targetURI;
+	}
+
 	public AnnotationKey(boolean method, Class<?>[] paramTypes, String className, String methodName) {
 		super();
 		this.method = method;

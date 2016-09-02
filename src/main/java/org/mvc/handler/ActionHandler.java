@@ -44,7 +44,7 @@ public class ActionHandler {
 		factory = new DiskFileItemFactory();
 	}
 
-	public String doAction(AnnotationKey annotationKey, HttpServletRequest request, HttpServletResponse reponse) {
+	public void doAction(AnnotationKey annotationKey, HttpServletRequest request, HttpServletResponse reponse) {
 		Class<?> clazz;// 被请求映射的Action方法所在类对象
 		Method method;// 被请求映射的Action方法
 		Object[] params = null;// 方法参数
@@ -74,15 +74,12 @@ public class ActionHandler {
 			} else {
 				// 将返回对象放在request域中
 				request.setAttribute("obj", obj);
-				target = getTarget(method);
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
 
-		return target;
 	}
 
 	/**
@@ -236,26 +233,5 @@ public class ActionHandler {
 		tempFile.setSizeInBytes(sizeInBytes);
 
 		return tempFile;
-	}
-
-	/**
-	 * 获取Action方法上配置的请求返回地址
-	 * 
-	 * @param method
-	 *            Action方法
-	 * @return 请求返回地址
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 * @throws InvocationTargetException
-	 * @throws NoSuchMethodException
-	 * @throws SecurityException
-	 */
-	private String getTarget(Method method) throws IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, NoSuchMethodException, SecurityException {
-		Annotation annotation = method.getAnnotation(Ok.class);
-		if (annotation == null)
-			return null;
-		String url = (String) annotation.annotationType().getDeclaredMethod("value").invoke(annotation);
-		return url;
 	}
 }
