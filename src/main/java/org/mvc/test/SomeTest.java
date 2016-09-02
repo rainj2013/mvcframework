@@ -12,18 +12,18 @@ import org.mvc.annotation.Upload;
 import org.mvc.upload.TempFile;
 import org.mvc.util.MvcUtil;
 
-@Action(url = "/test")
+@Action("/test")
 public class SomeTest{
 	
-	@Action(url="/myAction")
-	@Ok(url="->:/index.jsp")
+	@Action("/myAction")
+	@Ok("->:/index.jsp")
 	public Object test(@Param("..") User user){
 		System.out.println(user);
 		return user;
 	}
 	
-	@Action(url="/hello")
-	@Ok(url="->:/index.jsp")
+	@Action("/hello")
+	@Ok("->:/index.jsp")
 	public Object helloWorld(){
 		System.out.println(MvcUtil.getIp());
 		try {
@@ -35,8 +35,8 @@ public class SomeTest{
 		return "Hello,World!";
 	}
 	
-	@Action(url="/hi")
-	@Ok(url="->:/index.jsp")
+	@Action("/hi")
+	@Ok("->:/index.jsp")
 	public Object hi(){
 		System.out.println(MvcUtil.getReq().getRequestURI());
 		try {
@@ -48,7 +48,7 @@ public class SomeTest{
 	}
 	
 	
-	@Action(url="/mvc")
+	@Action("/mvc")
 	@Json
 	public Object mvc(){
 		User user = new User();
@@ -62,7 +62,7 @@ public class SomeTest{
 	
 	@Action
 	@Upload(conf = "/config.js")
-	@Ok(url = "->:/index.jsp")
+	@Ok("->:/index.jsp")
 	public String upload(@Param("file1") TempFile tf1,@Param("file2") TempFile tf2,@Param("description") String description){
 		return tf1.getPath()+"<br>"+tf2.getPath()+"<br>"+description;
 	}
