@@ -152,10 +152,10 @@ public class MainFilter implements Filter {
         // 判断请求返回类型
         if (paths[0].equals("->"))
             // 内部重定向
-            request.getRequestDispatcher(paths[1]).forward(request, response);
+            request.getRequestDispatcher("/WEB-INF"+paths[1]).forward(request, response);
         else if (paths[0].equals(">>"))
             // 外部重定向
-            response.sendRedirect(paths[1]);
+            response.sendRedirect(request.getContextPath()+paths[1]);
 
     }
 
