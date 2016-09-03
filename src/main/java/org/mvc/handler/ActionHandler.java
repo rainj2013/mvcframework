@@ -126,16 +126,37 @@ public class ActionHandler {
                 } else if ("double".equalsIgnoreCase(type)) {
                     field.set(form, Double.parseDouble(value));
                 } else if ("char".equalsIgnoreCase(type)) {
-                    field.set(form, value.substring(0, 1));
+                    field.set(form, value.toCharArray()[0]);
                 }
             }
 
             params[0] = form;
         } else {
+            Class[] parameterTypes = method.getParameterTypes();
             for (int i = 0; i < params.length; i++) {
                 if (null == params[i])
                     break;
                 params[i] = request.getParameter(params[i].toString());
+                Class<?> parameterType = parameterTypes[i];
+                String type = parameterType.getSimpleName();
+                if ("int".equals(type) || "Integer".equals(type)) {
+                    params[i] = Integer.valueOf(params[i].toString());
+                } else if ("long".equalsIgnoreCase(type)) {
+                    params[i] = Long.valueOf(params[i].toString());
+                } else if ("short".equalsIgnoreCase(type)) {
+                    params[i] = Short.valueOf(params[i].toString());
+                } else if ("byte".equalsIgnoreCase(type)) {
+                    params[i] = Byte.valueOf(params[i].toString());
+                } else if ("boolean".equalsIgnoreCase(type)) {
+                    boolean temp = "true".equals(params[i]) ? true : false;
+                    params[i] = temp;
+                } else if ("float".equalsIgnoreCase(type)) {
+                    params[i] = Float.valueOf(params[i].toString());
+                } else if ("double".equalsIgnoreCase(type)) {
+                    params[i] = Double.valueOf(params[i].toString());
+                } else if ("char".equalsIgnoreCase(type)) {
+                    params[i] = params[i].toString().toCharArray()[0];
+                }
             }
         }
         return params;

@@ -61,6 +61,13 @@ public class SomeTest {
         return user;
     }
 
+    @Action("/login")
+    @Json
+    public Object login(@Param("name")String name, @Param("password")int password) {
+        String result = String.format("用户名：%s,密码：%d", name, password);
+        System.out.printf(result);
+        return result;
+    }
 
     @Action
     @Upload("/config.js")

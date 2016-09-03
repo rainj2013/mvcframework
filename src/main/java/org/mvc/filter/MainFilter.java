@@ -150,9 +150,12 @@ public class MainFilter implements Filter {
         if (paths.length < 2)
             return;
         // 判断请求返回类型
-        if (paths[0].equals("->"))
-            // 内部重定向
-            request.getRequestDispatcher("/WEB-INF"+paths[1]).forward(request, response);
+        if (paths[0].equals("->")){
+            // 内部重定向(请求转发)
+            if (!paths[1].contains("/"))//WEB-INF里面的路径 如->:|dir|xx.jsp表示WEB-INF/dir/xx.jsp
+                paths[1] = "/WEB-INF"+(paths[1].replaceAll("[|]","/"));
+            request.getRequestDispatcher(paths[1]).forward(request, response);
+        }
         else if (paths[0].equals(">>"))
             // 外部重定向
             response.sendRedirect(request.getContextPath()+paths[1]);
