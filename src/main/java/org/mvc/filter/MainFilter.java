@@ -92,7 +92,7 @@ public class MainFilter implements Filter {
                 } else if (annotationType.equals(Upload.class)) {
                     String uploadconf = null;
                     try {
-                        uploadconf = (String) annotationType.getDeclaredMethod("conf").invoke(annotation);
+                        uploadconf = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
