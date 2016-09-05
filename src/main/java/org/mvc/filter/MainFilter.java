@@ -1,9 +1,6 @@
 package org.mvc.filter;
 
-import org.mvc.annotation.Action;
-import org.mvc.annotation.AnnotationKey;
-import org.mvc.annotation.Ok;
-import org.mvc.annotation.Upload;
+import org.mvc.annotation.*;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
 import org.mvc.util.MvcUtil;
@@ -58,16 +55,16 @@ public class MainFilter implements Filter {
             for (Annotation annotation : entry.getValue()) {
                 Class<? extends Annotation> annotationType = annotation.annotationType();
                 AnnotationKey annotationKey = entry.getKey();
-                if (annotationType.equals(Action.class)) {
+                if (annotationType.equals(Action.class)||annotationType.equals(POST.class)||annotationType.equals(GET.class)) {
                     String actionPath = null;
                     try {
-                        actionPath = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
+                        actionPath = annotationType.getDeclaredMethod("value").invoke(annotation).toString();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
-                    //如果Action注解没有值，就取类名/方法名
-                    if (null == actionPath || actionPath.equals("")) {
+                    //如果注解没有值，就取类名/方法名
+                    if (StringUtil.isBlank(actionPath)) {
                         if (annotationKey.isMethod())
                             actionPath = "/" + annotationKey.getMethodName();
                         else {
@@ -78,7 +75,11 @@ public class MainFilter implements Filter {
                         }
                     }
 
-                    //最终映射路径为类上的Action注解+方法Action注解
+                    //如果是方法上的注解，还要加上注解的名字，用以判断提交方法类型
+                    if(annotationKey.isMethod())
+                        actionPath+= "#"+annotationType.getSimpleName();
+
+                    //最终映射路径为类上的注解路径+方法注解路径
                     String className = annotationKey.getClassName();
                     if (!annotationKey.isMethod())
                         classActions.put(className, actionPath);
@@ -132,8 +133,17 @@ public class MainFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-        // 检测是否有改路径映射的Action，若无就直接返回404
+        //加上提交的方式
+        actionPath += "#" + request.getMethod();
+        // 检测是否有该路径和提交方式映射的方法
         AnnotationKey annotationKey = actions.get(actionPath);
+        //若找不到特定提交方式的方法就默认匹配同名的Action方法
+        if (annotationKey == null){
+            actionPath = actionPath.substring(0, actionPath.indexOf("#")+1);
+            actionPath += "Action";
+            annotationKey = actions.get(actionPath);
+        }
+        //还是找不到就返回404
         if (annotationKey == null) {
             response.setIntHeader("404", 404);
             chain.doFilter(request, response);

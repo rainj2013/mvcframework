@@ -5,11 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
-import org.mvc.annotation.Action;
-import org.mvc.annotation.Json;
-import org.mvc.annotation.Ok;
-import org.mvc.annotation.Param;
-import org.mvc.annotation.Upload;
+import org.mvc.annotation.*;
 import org.mvc.upload.TempFile;
 import org.mvc.util.FileUtil;
 import org.mvc.util.MvcUtil;
@@ -61,13 +57,17 @@ public class SomeTest {
         return user;
     }
 
-    @Action("/login")
+    @POST
     @Json
-    public Object login(@Param("name")String name, @Param("password")int password) {
-        String result = String.format("用户名：%s,密码：%d", name, password);
+    public Object login(@Param("username")String username, @Param("password")int password) {
+        String result = String.format("用户名：%s,密码：%d", username, password);
         System.out.printf(result);
         return result;
     }
+
+    @GET
+    @Ok("->:|jsp|login.jsp")
+    public void login() {}
 
     @Action
     @Upload("/config.js")
