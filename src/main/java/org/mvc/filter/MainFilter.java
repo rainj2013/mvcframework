@@ -55,7 +55,8 @@ public class MainFilter implements Filter {
             for (Annotation annotation : entry.getValue()) {
                 Class<? extends Annotation> annotationType = annotation.annotationType();
                 AnnotationKey annotationKey = entry.getKey();
-                if (annotationType.equals(Action.class)||annotationType.equals(POST.class)||annotationType.equals(GET.class)) {
+                if (annotationType.equals(Action.class) || annotationType.equals(POST.class) || annotationType.equals(GET.class)
+                        || annotationType.equals(HEAD.class) || annotationType.equals(DELETE.class)) {
                     String actionPath = null;
                     try {
                         actionPath = annotationType.getDeclaredMethod("value").invoke(annotation).toString();
@@ -76,8 +77,8 @@ public class MainFilter implements Filter {
                     }
 
                     //如果是方法上的注解，还要加上注解的名字，用以判断提交方法类型
-                    if(annotationKey.isMethod())
-                        actionPath+= "#"+annotationType.getSimpleName();
+                    if (annotationKey.isMethod())
+                        actionPath += "#" + annotationType.getSimpleName();
 
                     //最终映射路径为类上的注解路径+方法注解路径
                     String className = annotationKey.getClassName();
@@ -138,8 +139,8 @@ public class MainFilter implements Filter {
         // 检测是否有该路径和提交方式映射的方法
         AnnotationKey annotationKey = actions.get(actionPath);
         //若找不到特定提交方式的方法就默认匹配同名的Action方法
-        if (annotationKey == null){
-            actionPath = actionPath.substring(0, actionPath.indexOf("#")+1);
+        if (annotationKey == null) {
+            actionPath = actionPath.substring(0, actionPath.indexOf("#") + 1);
             actionPath += "Action";
             annotationKey = actions.get(actionPath);
         }
@@ -160,15 +161,14 @@ public class MainFilter implements Filter {
         if (paths.length < 2)
             return;
         // 判断请求返回类型
-        if (paths[0].equals("->")){
+        if (paths[0].equals("->")) {
             // 内部重定向(请求转发)
             if (!paths[1].contains("/"))//WEB-INF里面的路径 如->:|dir|xx.jsp表示WEB-INF/dir/xx.jsp
-                paths[1] = "/WEB-INF"+(paths[1].replaceAll("[|]","/"));
+                paths[1] = "/WEB-INF" + (paths[1].replaceAll("[|]", "/"));
             request.getRequestDispatcher(paths[1]).forward(request, response);
-        }
-        else if (paths[0].equals(">>"))
+        } else if (paths[0].equals(">>"))
             // 外部重定向
-            response.sendRedirect(request.getContextPath()+paths[1]);
+            response.sendRedirect(request.getContextPath() + paths[1]);
 
     }
 
