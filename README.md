@@ -18,7 +18,8 @@
   
 注解列表：  
 1. `@Action("")`  ：用于映射路径，可配置在类/方法上，url值若不填写，默认为注解所在类名/方法名  
-2. `@Param(value="")`  :用于接收请求参数。配置在请求方法的参数上。如需要将请求数据封装到一个JavaBean里面，value可设置为".."，如需逐个接收参数，value值为请求参数里面的key值，value值不填写则默认为参数名。示例：  `@Param("..") User user`  
+2. `@Param(value="")`  :用于接收请求参数。配置在请求方法的参数上。如需要将请求数据封装到一个JavaBean里面，value可设置为".."，如需逐个接收参数，value值为请求参数里面的key值，value值不填写则默认为参数名。示例：  
+`@Param("..") User user`  
 `@Param("name") String username, @Param int age`  
 3. `@Ok("")`  用于设置返回路径。如果转发请求至一个路径，url填写格式为`->:path`，示例：`@Ok(url = "->:/index.jsp")`，如果需要将请求重定向到一个路径，url格式为`>>:path`  
 4. `@Json`  用于返回Json数据，适用于响应ajax请求。  
