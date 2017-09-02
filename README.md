@@ -1,7 +1,7 @@
 不太懂wiki的标注，先写一个简单的吧 = =  
 本框架基于反射和注解实现，所以配置基本上都是注解形式的，个别功能需要配合json文件配置更方便使用。  
 在使用本框架前，请先在web.xml中配置过滤器  
-  >```<filter>  
+  ```<filter>  
   <filter-name>MainFilter</filter-name>  
   <filter-class>org.mvc.filter.MainFilter</filter-class>  
   <init-param>  
@@ -12,7 +12,8 @@
   <filter-mapping>  
   <filter-name>MainFilter</filter-name>  
   <url-pattern>*</url-pattern>  
-  </filter-mapping>  
+  </filter-mapping>
+  ```
   
 其中${scanpage}为需要扫描的包，一般配置为响应请求的类所在包即可。  
   
