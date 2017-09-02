@@ -24,9 +24,9 @@
 3. `@Ok("")`  用于设置返回路径。如果转发请求至一个路径，url填写格式为`->:path`，示例：`@Ok(url = "->:/index.jsp")`，如果需要将请求重定向到一个路径，url格式为`>>:path`  
 4. `@Json`  用于返回Json数据，适用于响应ajax请求。  
 5.  `@Upload("")`  用于响应上传文件请求。conf值为配置文件所在路径，默认为config.js。配置文件示例：  
->{  
+```{  
 path : "/home/rainj2013/桌面/upload",//上传文件暂存文件夹  
 maxFileSize : "1024",//允许上传的文件大小上限，单位为byte  
 nameFilter : "^(.+[.])(gif|jpg|png)$",//允许上传的文件扩展名  
 charset : "utf-8"//解析非文件表单项时采用的字符集  
-}  
+}```
