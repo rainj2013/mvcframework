@@ -37,7 +37,11 @@ public class MainFilter implements Filter {
      */
     @Override
     public void init(FilterConfig config) throws ServletException {
-        ApplicationContext.set("encoding", config.getInitParameter("encoding"));
+        String charset = config.getInitParameter("encoding");
+        if (StringUtil.isEmpty(charset)) {
+            charset = "UTF-8";
+        }
+        ApplicationContext.set("encoding", charset);
         // 初始化请求处理类
         actionHandler = new ActionHandler();
         String relpath = config.getInitParameter("page");// 注解扫描路径，在web.xml中配置
