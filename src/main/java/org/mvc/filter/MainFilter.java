@@ -1,6 +1,7 @@
 package org.mvc.filter;
 
 import org.mvc.annotation.*;
+import org.mvc.context.ApplicationContext;
 import org.mvc.handler.ActionHandler;
 import org.mvc.util.ClassUtil;
 import org.mvc.util.MvcUtil;
@@ -36,6 +37,7 @@ public class MainFilter implements Filter {
      */
     @Override
     public void init(FilterConfig config) throws ServletException {
+        ApplicationContext.set("encoding", config.getInitParameter("encoding"));
         // 初始化请求处理类
         actionHandler = new ActionHandler();
         String relpath = config.getInitParameter("page");// 注解扫描路径，在web.xml中配置
@@ -90,13 +92,13 @@ public class MainFilter implements Filter {
                     }
                     //上传文件的请求
                 } else if (annotationType.equals(Upload.class)) {
-                    String uploadconf = null;
+                    String uploadConf = null;
                     try {
-                        uploadconf = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
+                        uploadConf = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    businessHandlerMsg.setUploadConf(uploadconf);
+                    businessHandlerMsg.setUploadConf(uploadConf);
                     //跳转地址
                 } else if (annotationType.equals(Ok.class)) {
                     try {

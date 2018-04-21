@@ -1,12 +1,10 @@
 /**
  * 
  */
-package org.mvc.core;
+package org.mvc.context;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.mvc.Context;
 
 /** 
 * @ClassName MvcContext 
@@ -15,7 +13,7 @@ import org.mvc.Context;
 * @date 2016年4月21日 下午7:24:01 
 *  
 */
-public class MvcContext implements Context{
+public class MvcContext implements Context {
 
 	private Map<String,Object> map = new HashMap<>();
 	

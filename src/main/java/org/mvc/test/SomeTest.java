@@ -61,7 +61,7 @@ public class SomeTest {
     @Json
     public Object login(@Param("username")String username, @Param("password")int password) {
         String result = String.format("用户名：%s,密码：%d", username, password);
-        System.out.printf(result);
+        System.out.println(result);
         return result;
     }
 

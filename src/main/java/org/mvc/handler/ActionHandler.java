@@ -2,6 +2,7 @@ package org.mvc.handler;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -21,9 +22,11 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mvc.annotation.BusinessHandlerMsg;
 import org.mvc.annotation.Json;
+import org.mvc.context.ApplicationContext;
 import org.mvc.upload.TempFile;
 import org.mvc.util.FileUtil;
 import org.mvc.util.StringUtil;
+import sun.awt.AppContext;
 
 /**
  * @author rainj2013 yangyujian25@gmail.com
@@ -47,7 +50,9 @@ public class ActionHandler {
         Method method;// 被请求映射的Action方法
         Object[] params;// 方法参数
         Object result;// 方法返回结果
+        String charset = ApplicationContext.getAs(String.class, "encoding");
         try {
+            request.setCharacterEncoding(charset);
             clazz = businessHandlerMsg.getParentClass();
             method = businessHandlerMsg.getMethod();
             // 普通请求跟上传请求的参数获取方式分开
@@ -62,6 +67,8 @@ public class ActionHandler {
             if (null != method.getAnnotation(Json.class)) {
                 ObjectMapper mapper = new ObjectMapper();
                 String json = mapper.writeValueAsString(result);
+                response.setHeader("Content-type", String.format("text/html;charset=%s", charset));
+                response.setCharacterEncoding(charset);
                 try (PrintWriter writer = response.getWriter()) {
                     writer.write(json);
                 }
