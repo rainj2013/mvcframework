@@ -1,21 +1,22 @@
 本框架基于反射和注解实现，所以配置基本上都是注解形式的，个别功能需要配合json文件配置使用。  
 在使用本框架前，请先在web.xml中配置过滤器  
-  ```<filter>  
-  <filter-name>MainFilter</filter-name>  
-  <filter-class>org.mvc.filter.MainFilter</filter-class>  
-  <init-param>  
-  		<param-name>page</param-name>  
-  		<param-value>${scanpage}</param-value>  
-  </init-param>
-  <init-param>
-      <param-name>encoding</param-name>
-      <param-value>UTF-8</param-value>
-  </init-param>  
-  </filter>  
-  <filter-mapping>  
-  <filter-name>MainFilter</filter-name>  
-  <url-pattern>*</url-pattern>  
-  </filter-mapping>
+  ```
+  <filter>
+          <filter-name>MainFilter</filter-name>
+          <filter-class>org.mvc.filter.MainFilter</filter-class>
+          <init-param>
+              <param-name>page</param-name>
+              <param-value>org.mvc</param-value>
+          </init-param>
+          <init-param>
+              <param-name>encoding</param-name>
+              <param-value>UTF-8</param-value>
+          </init-param>
+      </filter>
+      <filter-mapping>
+          <filter-name>MainFilter</filter-name>
+          <url-pattern>*</url-pattern>
+      </filter-mapping>
   ```
   
 其中${scanpage}为需要扫描的包，一般配置为响应请求的类所在包即可。  
@@ -28,9 +29,11 @@
 3. `@Ok("")`  用于设置返回路径。如果转发请求至一个路径，url填写格式为`->:path`，示例：`@Ok(url = "->:/index.jsp")`，如果需要将请求重定向到一个路径，url格式为`>>:path`  
 4. `@Json`  用于返回Json数据，适用于响应ajax请求。  
 5.  `@Upload("")`  用于响应上传文件请求。conf值为配置文件所在路径，默认为config.js。配置文件示例：  
-```{  
-"path" : "/home/rainj2013/桌面/upload",//上传文件暂存文件夹  
-"maxFileSize" : "1024",//允许上传的文件大小上限，单位为byte  
-"nameFilter" : "^(.+[.])(gif|jpg|png)$",//允许上传的文件扩展名  
-"charset" : "utf-8"//解析非文件表单项时采用的字符集  
-}```
+```
+{  
+    "path" : "/home/rainj2013/桌面/upload",//上传文件暂存文件夹  
+    "maxFileSize" : "1024",//允许上传的文件大小上限，单位为byte  
+    "nameFilter" : "^(.+[.])(gif|jpg|png)$",//允许上传的文件扩展名  
+    "charset" : "utf-8"//解析非文件表单项时采用的字符集  
+}
+```
