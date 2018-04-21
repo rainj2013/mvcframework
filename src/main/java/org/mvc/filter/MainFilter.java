@@ -26,12 +26,10 @@ import java.util.regex.Pattern;
  */
 public class MainFilter implements Filter {
 
-    private Map<AnnotationKey, Annotation[]> annotations;
-    private Map<String, AnnotationKey> actions;
+    private Map<String, BusinessHandlerMsg> actions;
     private ActionHandler actionHandler;
     private static final String IGNORE = "^.+\\.(jsp|png|gif|jpg|js|css|jspx|jpeg|swf|ico)$";
     private Pattern pattern = Pattern.compile(IGNORE);
-    private Matcher matcher;
 
     /*
      * 初始化，扫描包，分析注解等
@@ -44,17 +42,18 @@ public class MainFilter implements Filter {
         relpath = relpath.replace(".", "/");
         relpath = "/" + relpath;
         String abspath = this.getClass().getResource(relpath).getPath();
-        annotations = ClassUtil.getClassAnnotations(relpath, abspath);// 获取扫描路径下所有类对象上面的注解
+        //业务类/方法上与它们上面的注解映射表
+        Map<BusinessHandlerMsg, Annotation[]> annotations = ClassUtil.getClassAnnotations(relpath, abspath);
 
         actions = new HashMap<>();
         Map<String, String> classActions = new HashMap<>();
 
-        // 获取注解上url值，与对应的Annotation封装类AnnotationKey一起装进Map
-        for (Entry<AnnotationKey, Annotation[]> entry : annotations.entrySet()) {
+        // 生成路径与实际业务方法的映射
+        for (Entry<BusinessHandlerMsg, Annotation[]> entry : annotations.entrySet()) {
 
             for (Annotation annotation : entry.getValue()) {
                 Class<? extends Annotation> annotationType = annotation.annotationType();
-                AnnotationKey annotationKey = entry.getKey();
+                BusinessHandlerMsg businessHandlerMsg = entry.getKey();
                 if (annotationType.equals(Action.class) || annotationType.equals(POST.class) || annotationType.equals(GET.class)
                         || annotationType.equals(HEAD.class) || annotationType.equals(DELETE.class)) {
                     String actionPath = null;
@@ -63,13 +62,12 @@ public class MainFilter implements Filter {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                     //如果注解没有值，就取类名/方法名
                     if (StringUtil.isBlank(actionPath)) {
-                        if (annotationKey.isMethod())
-                            actionPath = "/" + annotationKey.getMethodName();
+                        if (businessHandlerMsg.getMethod() != null)
+                            actionPath = "/" + businessHandlerMsg.getMethod().getName();
                         else {
-                            actionPath = annotationKey.getClassName();
+                            actionPath = businessHandlerMsg.getParentClass().getName();
                             if (actionPath.contains("."))
                                 actionPath = actionPath.substring(actionPath.lastIndexOf(".") + 1);
                             actionPath = "/" + actionPath;
@@ -77,18 +75,18 @@ public class MainFilter implements Filter {
                     }
 
                     //如果是方法上的注解，还要加上注解的名字，用以判断提交方法类型
-                    if (annotationKey.isMethod())
+                    if (businessHandlerMsg.getMethod() != null)
                         actionPath += "#" + annotationType.getSimpleName();
 
                     //最终映射路径为类上的注解路径+方法注解路径
-                    String className = annotationKey.getClassName();
-                    if (!annotationKey.isMethod())
+                    String className = businessHandlerMsg.getClass().getName();
+                    if (businessHandlerMsg.getMethod() == null)
                         classActions.put(className, actionPath);
                     else {
                         String parentPath = classActions.get(className);
                         if (parentPath != null)
                             actionPath = parentPath + actionPath;
-                        actions.put(actionPath, annotationKey);
+                        actions.put(actionPath, businessHandlerMsg);
                     }
                     //上传文件的请求
                 } else if (annotationType.equals(Upload.class)) {
@@ -98,21 +96,16 @@ public class MainFilter implements Filter {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    annotationKey.setUploadconf(uploadconf);
+                    businessHandlerMsg.setUploadConf(uploadconf);
                     //跳转地址
                 } else if (annotationType.equals(Ok.class)) {
                     try {
                         String targetURI = (String) annotationType.getDeclaredMethod("value").invoke(annotation);
-                        annotationKey.setTargetURI(targetURI);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchMethodException e) {
+                        businessHandlerMsg.setTargetURI(targetURI);
+                    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                         e.printStackTrace();
                     }
                 }
-
             }
         }
     }
@@ -126,10 +119,9 @@ public class MainFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) resp;
-
         String actionPath = request.getServletPath();
         // 静态资源类型，不进行过滤处理
-        matcher = pattern.matcher(actionPath);
+        Matcher matcher = pattern.matcher(actionPath);
         if (matcher.find()) {
             chain.doFilter(request, response);
             return;
@@ -137,24 +129,23 @@ public class MainFilter implements Filter {
         //加上提交的方式
         actionPath += "#" + request.getMethod();
         // 检测是否有该路径和提交方式映射的方法
-        AnnotationKey annotationKey = actions.get(actionPath);
+        BusinessHandlerMsg businessHandlerMsg = actions.get(actionPath);
         //若找不到特定提交方式的方法就默认匹配同名的Action方法
-        if (annotationKey == null) {
+        if (businessHandlerMsg == null) {
             actionPath = actionPath.substring(0, actionPath.indexOf("#") + 1);
             actionPath += "Action";
-            annotationKey = actions.get(actionPath);
+            businessHandlerMsg = actions.get(actionPath);
         }
         //还是找不到就返回404
-        if (annotationKey == null) {
+        if (businessHandlerMsg == null) {
             response.setIntHeader("404", 404);
             chain.doFilter(request, response);
             return;
         }
         MvcUtil.set(request, response);
-        // 将请求转交给ActionHandler
-        actionHandler.doAction(annotationKey, request, response);
-        MvcUtil.releaseData();//返回时就把threadlocal清空了吧，防止内存泄露
-        String targetURI = annotationKey.getTargetURI();
+        actionHandler.doAction(businessHandlerMsg, request, response);
+        MvcUtil.releaseData();//清空进程空间中存储的当前请求的一些属性
+        String targetURI = businessHandlerMsg.getTargetURI();
         if (StringUtil.isBlank(targetURI))
             return;
         String[] paths = targetURI.split(":");

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.mvc.annotation.AnnotationKey;
+import org.mvc.annotation.BusinessHandlerMsg;
 
 public class ClassUtil {
 
@@ -71,12 +71,12 @@ public class ClassUtil {
      * @param abspath
      * @return 注解集合
      */
-    public static Map<AnnotationKey, Annotation[]> getClassAnnotations(String relpath, String abspath) {
+    public static Map<BusinessHandlerMsg, Annotation[]> getClassAnnotations(String relpath, String abspath) {
         //把类注解放在前面，这样地址映射的时候会先扫描类上面的注解,最终形成类注解地址+方法注解地址的映射方式
-        Map<AnnotationKey, Annotation[]> annotations = new TreeMap<>(new Comparator<AnnotationKey>() {
+        Map<BusinessHandlerMsg, Annotation[]> annotations = new TreeMap<>(new Comparator<BusinessHandlerMsg>() {
             @Override
-            public int compare(AnnotationKey key1, AnnotationKey key2) {
-                if (!key1.isMethod() && key2.isMethod())
+            public int compare(BusinessHandlerMsg key1, BusinessHandlerMsg key2) {
+                if (key1.getMethod() == null && key2.getMethod() != null)
                     return -1;
                 return 1;
             }

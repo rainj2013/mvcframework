@@ -17,7 +17,7 @@ import org.mvc.Context;
 */
 public class MvcContext implements Context{
 
-	Map<String,Object> map = new HashMap<>();
+	private Map<String,Object> map = new HashMap<>();
 	
 	@Override
 	public Context set(String key, Object obj) {

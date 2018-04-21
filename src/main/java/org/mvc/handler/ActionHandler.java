@@ -2,10 +2,10 @@ package org.mvc.handler;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -19,7 +19,7 @@ import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.mvc.annotation.AnnotationKey;
+import org.mvc.annotation.BusinessHandlerMsg;
 import org.mvc.annotation.Json;
 import org.mvc.upload.TempFile;
 import org.mvc.util.FileUtil;
@@ -42,36 +42,33 @@ public class ActionHandler {
         factory = new DiskFileItemFactory();
     }
 
-    public void doAction(AnnotationKey annotationKey, HttpServletRequest request, HttpServletResponse reponse) {
+    public void doAction(BusinessHandlerMsg businessHandlerMsg, HttpServletRequest request, HttpServletResponse response) {
         Class<?> clazz;// 被请求映射的Action方法所在类对象
         Method method;// 被请求映射的Action方法
-        Object[] params = null;// 方法参数
-        Object obj = null;// 方法返回结果
+        Object[] params;// 方法参数
+        Object result;// 方法返回结果
         try {
-            clazz = Class.forName(annotationKey.getClassName());
-            if (null != annotationKey.getParamTypes()) {
-                method = clazz.getDeclaredMethod(annotationKey.getMethodName(), annotationKey.getParamTypes());
-                // 普通请求跟上传请求的参数获取方式分开吧
-                String conf = annotationKey.getUploadconf();
-                if (conf != null)
-                    params = getParams(conf, params, method, request);
-                else
-                    params = getParams(params, method, request);
+            clazz = businessHandlerMsg.getParentClass();
+            method = businessHandlerMsg.getMethod();
+            // 普通请求跟上传请求的参数获取方式分开
+            String conf = businessHandlerMsg.getUploadConf();
+            if (conf != null)
+                params = getParams(conf, method, request);
+            else
+                params = getParams(method, request);
 
-            } else {
-                method = clazz.getDeclaredMethod(annotationKey.getMethodName());
-            }
-            obj = method.invoke(clazz.newInstance(), params);
+            result = method.invoke(clazz.newInstance(), params);
             // 返回Json格式数据
             if (null != method.getAnnotation(Json.class)) {
                 ObjectMapper mapper = new ObjectMapper();
-                String json = mapper.writeValueAsString(obj);
-                reponse.getOutputStream().write(json.getBytes());
+                String json = mapper.writeValueAsString(result);
+                try (PrintWriter writer = response.getWriter()) {
+                    writer.write(json);
+                }
             } else {
                 // 将返回对象放在request域中
-                request.setAttribute("obj", obj);
+                request.setAttribute("obj", result);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -81,7 +78,6 @@ public class ActionHandler {
     /**
      * 将请求参数封装到数组或者bean对象
      *
-     * @param params  保存Action方法参数的数组
      * @param method  Action方法
      * @param request 请求的request对象
      * @return 保存Action方法参数的数组
@@ -92,10 +88,10 @@ public class ActionHandler {
      * @throws InvocationTargetException
      * @throws InstantiationException
      */
-    private Object[] getParams(Object[] params, Method method, HttpServletRequest request)
+    private Object[] getParams(Method method, HttpServletRequest request)
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
             InvocationTargetException, InstantiationException {
-        params = methodHandler.getParams(method);// @Param
+        Object[] params = methodHandler.getParams(method);// @Param
         // 当接收参数key为 ".." 时将接收到的参数封装到一个bean里
         if (params.length == 1 && "..".equals(params[0])) {
             Class<?> clazz = method.getParameterTypes()[0];// bean的类对象
@@ -119,7 +115,7 @@ public class ActionHandler {
                 } else if ("byte".equalsIgnoreCase(type)) {
                     field.set(form, Byte.parseByte(value));
                 } else if ("boolean".equalsIgnoreCase(type)) {
-                    boolean temp = "true".equals(value) ? true : false;
+                    boolean temp = "true".equals(value);
                     field.set(form, temp);
                 } else if ("float".equalsIgnoreCase(type)) {
                     field.set(form, Float.parseFloat(value));
@@ -129,7 +125,6 @@ public class ActionHandler {
                     field.set(form, value.toCharArray()[0]);
                 }
             }
-
             params[0] = form;
         } else {
             Class[] parameterTypes = method.getParameterTypes();
@@ -148,7 +143,7 @@ public class ActionHandler {
                 } else if ("byte".equalsIgnoreCase(type)) {
                     params[i] = Byte.valueOf(params[i].toString());
                 } else if ("boolean".equalsIgnoreCase(type)) {
-                    boolean temp = "true".equals(params[i]) ? true : false;
+                    boolean temp = "true".equals(params[i]);
                     params[i] = temp;
                 } else if ("float".equalsIgnoreCase(type)) {
                     params[i] = Float.valueOf(params[i].toString());
@@ -162,14 +157,14 @@ public class ActionHandler {
         return params;
     }
 
-    private Object[] getParams(String confPath, Object[] params, Method method, HttpServletRequest request)
+    private Object[] getParams(String confPath, Method method, HttpServletRequest request)
             throws Exception {
-        params = methodHandler.getParams(method);
+        Object[] params = methodHandler.getParams(method);
         Map<String, String> config;
-        String tempPath = null;// 文件暂存路径
-        String maxFileSize = null;//文件大小上限
-        String nameFilter = null;//允许上传的扩展名列表
-        String charset = null;//解析非文件表单项的字符集
+        String tempPath;// 文件暂存路径
+        String maxFileSize;//文件大小上限
+        String nameFilter;//允许上传的扩展名列表
+        String charset;//解析非文件表单项的字符集
         try {
             config = FileUtil.readConfig(confPath);
             tempPath = config.get("path");
@@ -182,12 +177,10 @@ public class ActionHandler {
 
         factory.setRepository(new File(tempPath));
         ServletFileUpload upload = new ServletFileUpload(factory);
-        List<FileItem> items = null;
+        List<FileItem> items;
         try {
             items = upload.parseRequest(request);
-            Iterator<FileItem> iter = items.iterator();
-            while (iter.hasNext()) {
-                FileItem item = iter.next();
+            for (FileItem item : items) {
                 int index = getParamsIndex(params, item);
                 if (index == -1)
                     continue;
