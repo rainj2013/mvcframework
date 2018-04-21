@@ -1,6 +1,5 @@
 package org.mvc.util;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class FileUtil {
     public static Map<String, String> readConfig(String filePath) throws IOException {
         InputStream ins = FileUtil.class.getResourceAsStream(filePath);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         byte[] buffer = new byte[4096];
         int length;
         while ((length = ins.read(buffer)) != -1) {
